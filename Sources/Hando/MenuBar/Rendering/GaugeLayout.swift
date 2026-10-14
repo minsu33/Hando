@@ -23,6 +23,7 @@ struct GaugeLayout {
         CGSize(width: (textWidth + metrics.padding * 2).rounded(.up), height: metrics.height)
     }
 
+
     var textOrigin: CGPoint {
         CGPoint(x: metrics.padding, y: metrics.baseline)
     }

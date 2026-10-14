@@ -22,6 +22,7 @@ enum Strings {
         static let service = "서비스"
         static let typeface = "글꼴"
         static let launchAtLogin = "로그인 시 자동 실행"
+        static let lockEffect = "다 찼을 때"
         static let back = "뒤로"
         static let refresh = "새로고침"
         static let quit = "종료"
@@ -63,6 +64,7 @@ enum Strings {
             let w = weekly.map { "주간 \($0)% 사용" } ?? ""
             return [service, s, w].filter { !$0.isEmpty }.joined(separator: ", ")
         }
+        static func resetsIn(_ left: String) -> String { "\(left) 뒤 리셋" }
         static func loading(_ service: String) -> String { "\(service), 불러오는 중" }
         static func error(_ service: String) -> String { "\(service), 오류" }
     }

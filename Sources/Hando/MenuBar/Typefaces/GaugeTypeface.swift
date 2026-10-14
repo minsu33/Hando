@@ -21,14 +21,18 @@ extension GaugeTypeface {
 
 enum TypefaceCatalog {
     static let all: [any GaugeTypeface] = [
-        PixelTypeface(),
-        FontTypeface.terminal,
         FontTypeface.system,
+        FontTypeface.terminal,
+        PixelTypeface(),
+        PixelTypeface(style: .scanline),
+        FontTypeface.poster,
+        FontTypeface.marker,
+        FontTypeface.chalk,
     ]
 
     static let defaultID = "pixel"
 
     static func typeface(id: String) -> any GaugeTypeface {
-        all.first { $0.id == id } ?? all[0]
+        all.first { $0.id == id } ?? all.first { $0.id == defaultID }!
     }
 }

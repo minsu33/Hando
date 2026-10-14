@@ -8,12 +8,19 @@ struct MenuBarState: Equatable {
     let sessionUsed: Double?    // 0...1, nil = 5시간 창 없는 플랜
     let weeklyUsed: Double?
     let status: Status
+    /// 한도를 다 써서 막혀 있으면 풀리는 시각 (주간이 다 찼으면 주간 기준)
+    let lockedUntil: Date?
 
-    init(label: String, sessionUsed: Double?, weeklyUsed: Double?, status: Status) {
+    init(label: String, sessionUsed: Double?, weeklyUsed: Double?, status: Status, lockedUntil: Date? = nil) {
         self.label = label.uppercased()
         self.sessionUsed = sessionUsed.map { min(max($0, 0), 1) }
         self.weeklyUsed = weeklyUsed.map { min(max($0, 0), 1) }
         self.status = status
+        self.lockedUntil = lockedUntil
+    }
+
+    func isLocked(now: Date) -> Bool {
+        (lockedUntil ?? .distantPast) > now
     }
 
     init(descriptor: ProviderDescriptor, state: ProviderState, now: Date = Date()) {
@@ -23,9 +30,18 @@ struct MenuBarState: Equatable {
         case (nil, _?): status = .error
         case (_?, _): status = state.isStale(now: now) ? .stale : .normal
         }
+        let snapshot = state.snapshot
+        let locked = Self.lockedWindow(snapshot, now: now)
         self.init(label: descriptor.menuBarLabel,
-                  sessionUsed: state.snapshot?.session?.usedFraction,
-                  weeklyUsed: state.snapshot?.weekly?.usedFraction,
-                  status: status)
+                  sessionUsed: snapshot?.session?.usedFraction,
+                  weeklyUsed: snapshot?.weekly?.usedFraction,
+                  status: status,
+                  lockedUntil: locked?.resetsAt)
+    }
+
+    private static func lockedWindow(_ snapshot: UsageSnapshot?, now: Date) -> UsageWindow? {
+        [snapshot?.weekly, snapshot?.session]
+            .compactMap { $0 }
+            .first { $0.usedPercent >= 100 && ($0.resetsAt ?? .distantPast) > now }
     }
 }

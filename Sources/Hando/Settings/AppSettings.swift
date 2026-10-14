@@ -7,6 +7,7 @@ final class AppSettings: ObservableObject {
         static let providerID = "providerID"
         static let typefaceID = "typefaceID"
         static let refreshInterval = "refreshInterval"
+        static let lockEffectID = "lockEffectID"
     }
 
     static let minRefresh: TimeInterval = 60
@@ -20,6 +21,9 @@ final class AppSettings: ObservableObject {
     @Published var typefaceID: String {
         didSet { defaults.set(typefaceID, forKey: Key.typefaceID) }
     }
+    @Published var lockEffectID: String {
+        didSet { defaults.set(lockEffectID, forKey: Key.lockEffectID) }
+    }
     @Published var refreshInterval: TimeInterval {
         didSet { defaults.set(refreshInterval, forKey: Key.refreshInterval) }
     }
@@ -28,6 +32,7 @@ final class AppSettings: ObservableObject {
         self.defaults = defaults
         providerID = defaults.string(forKey: Key.providerID)
         typefaceID = defaults.string(forKey: Key.typefaceID) ?? TypefaceCatalog.defaultID
+        lockEffectID = defaults.string(forKey: Key.lockEffectID) ?? LockEffectCatalog.defaultID
         let saved = defaults.double(forKey: Key.refreshInterval)
         refreshInterval = saved > 0 ? max(saved, Self.minRefresh) : Self.defaultRefresh
     }

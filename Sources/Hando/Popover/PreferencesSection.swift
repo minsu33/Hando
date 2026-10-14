@@ -5,6 +5,7 @@ struct PreferencesSection: View {
     let registry: ProviderRegistry
     let label: String
     let onOpenTypefaces: () -> Void
+    let onOpenLockEffects: () -> Void
 
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
 
@@ -18,6 +19,7 @@ struct PreferencesSection: View {
             }
 
             typefaceRow
+            lockEffectRow
 
             if LaunchAtLogin.isAvailable {
                 Toggle(Strings.Popover.launchAtLogin, isOn: $launchAtLogin)
@@ -34,13 +36,27 @@ struct PreferencesSection: View {
     // 누르면 글꼴 페이지로
     private var typefaceRow: some View {
         let current = TypefaceCatalog.typeface(id: settings.typefaceID)
-        return Button(action: onOpenTypefaces) {
+        return navigationRow(Strings.Popover.typeface, value: current.name, action: onOpenTypefaces) {
+            Image(nsImage: GaugePreview.image(typeface: current, label: label))
+                .renderingMode(.template)
+        }
+    }
+
+    // 누르면 다 찼을 때 효과 페이지로
+    private var lockEffectRow: some View {
+        navigationRow(Strings.Popover.lockEffect,
+                      value: LockEffectCatalog.effect(id: settings.lockEffectID).name,
+                      action: onOpenLockEffects) { EmptyView() }
+    }
+
+    private func navigationRow<Accessory: View>(_ title: String, value: String, action: @escaping () -> Void,
+                                                @ViewBuilder accessory: () -> Accessory) -> some View {
+        Button(action: action) {
             HStack(spacing: 8) {
-                Text(Strings.Popover.typeface)
+                Text(title)
                 Spacer()
-                Image(nsImage: GaugePreview.image(typeface: current, label: label))
-                    .renderingMode(.template)
-                Text(current.name).foregroundStyle(.secondary)
+                accessory()
+                Text(value).foregroundStyle(.secondary)
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)

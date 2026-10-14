@@ -4,4 +4,6 @@ import AppKit
 protocol MenuBarStyle {
     /// isTemplate = true 인 단색 이미지 (라이트/다크 자동)
     func image(for state: MenuBarState) -> NSImage
+    /// 이 위쪽이 글자 영역 (움직임 효과가 글자만 움직일 때 씀)
+    var textBottom: CGFloat { get }
 }

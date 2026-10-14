@@ -3,21 +3,9 @@ import AppKit
 @testable import Hando
 
 final class RenderingTests: XCTestCase {
-    /// (x, y) pt 위치의 alpha (0...1)
-    private func alpha(_ image: NSImage, x: CGFloat, y: CGFloat, scale: CGFloat = 2) -> CGFloat {
-        let w = Int(image.size.width * scale), h = Int(image.size.height * scale)
-        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h,
-                                   bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                                   colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
-        rep.size = image.size
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-        image.draw(in: NSRect(origin: .zero, size: image.size))
-        NSGraphicsContext.restoreGraphicsState()
-        // 비트맵은 위가 0
-        return rep.colorAt(x: Int(x * scale), y: Int(y * scale))!.alphaComponent
+    private func alpha(_ image: NSImage, x: CGFloat, y: CGFloat) -> CGFloat {
+        RenderProbe.alpha(image, x: x, y: y)
     }
-
     private let style = TextGaugeStyle(typeface: PixelTypeface())
 
     // 'C' 왼쪽 세로획 4번째 줄 도트 가운데: x = 2.5 + 0.75, y = 13 - 9 + 4.5
@@ -64,5 +52,22 @@ final class ProviderErrorTests: XCTestCase {
         XCTAssertTrue(ProviderError.needsUserAction(hint: "").needsAttention)
         XCTAssertFalse(ProviderError.rateLimited(retryAfter: nil).needsAttention)
         XCTAssertFalse(ProviderError.network("x").needsAttention)
+    }
+}
+
+enum RenderProbe {
+    /// (x, y) pt 위치의 alpha (0...1)
+    static func alpha(_ image: NSImage, x: CGFloat, y: CGFloat, scale: CGFloat = 2) -> CGFloat {
+        let w = Int(image.size.width * scale), h = Int(image.size.height * scale)
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h,
+                                   bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                   colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        rep.size = image.size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        image.draw(in: NSRect(origin: .zero, size: image.size))
+        NSGraphicsContext.restoreGraphicsState()
+        // 비트맵은 위가 0
+        return rep.colorAt(x: Int(x * scale), y: Int(y * scale))!.alphaComponent
     }
 }

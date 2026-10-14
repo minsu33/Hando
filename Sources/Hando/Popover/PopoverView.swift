@@ -5,7 +5,7 @@ struct PopoverView: View {
     @ObservedObject var settings: AppSettings
     let registry: ProviderRegistry
 
-    private enum Page { case main, typefaces }
+    private enum Page { case main, typefaces, lockEffects }
     @State private var page = Page.main
 
     var body: some View {
@@ -14,15 +14,42 @@ struct PopoverView: View {
             case .main:
                 main.transition(.move(edge: .leading).combined(with: .opacity))
             case .typefaces:
-                TypefacePickerView(settings: settings, label: store.provider.descriptor.menuBarLabel) {
-                    go(.main)
-                }
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+                typefacePage.transition(.move(edge: .trailing).combined(with: .opacity))
+            case .lockEffects:
+                lockEffectPage.transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .padding(16)
         .frame(width: 320)
         .onDisappear { page = .main }   // 다시 열면 첫 화면부터
+    }
+
+    private var label: String { store.provider.descriptor.menuBarLabel }
+
+    private var typefacePage: some View {
+        OptionPickerPage(
+            title: Strings.Popover.typeface,
+            options: TypefaceCatalog.all.map { .init(id: $0.id, name: $0.name) },
+            selectedID: settings.typefaceID,
+            preview: { option in
+                Image(nsImage: GaugePreview.image(typeface: TypefaceCatalog.typeface(id: option.id), label: label))
+                    .renderingMode(.template)
+            },
+            onSelect: { settings.typefaceID = $0 },
+            onBack: { go(.main) })
+    }
+
+    private var lockEffectPage: some View {
+        let typeface = TypefaceCatalog.typeface(id: settings.typefaceID)
+        return OptionPickerPage(
+            title: Strings.Popover.lockEffect,
+            options: LockEffectCatalog.all.map { .init(id: $0.id, name: $0.name) },
+            selectedID: settings.lockEffectID,
+            preview: { option in
+                LockEffectPreview(effect: LockEffectCatalog.effect(id: option.id), typeface: typeface, label: label)
+            },
+            onSelect: { settings.lockEffectID = $0 },
+            onBack: { go(.main) })
     }
 
     private func go(_ next: Page) {
@@ -42,8 +69,9 @@ struct PopoverView: View {
             content
 
             Divider()
-            PreferencesSection(settings: settings, registry: registry,
-                               label: store.provider.descriptor.menuBarLabel) { go(.typefaces) }
+            PreferencesSection(settings: settings, registry: registry, label: label,
+                               onOpenTypefaces: { go(.typefaces) },
+                               onOpenLockEffects: { go(.lockEffects) })
             Divider()
             FooterView(lastUpdated: store.state.lastSuccess) {
                 Task { await store.refresh(.userInitiated) }

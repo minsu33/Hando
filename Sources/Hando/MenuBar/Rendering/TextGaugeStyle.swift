@@ -1,9 +1,12 @@
 import AppKit
 
 /// 기본 스타일: 쓸수록 글자에 잉크가 차고, 아래 잔디 7칸이 주간 사용량
+/// 한도를 다 쓴 상태는 모양은 그대로, StatusItemController가 몇 초마다 흔들어 줌
 struct TextGaugeStyle: MenuBarStyle {
     let typeface: any GaugeTypeface
     var metrics: GaugeMetrics = .standard
+
+    var textBottom: CGFloat { (metrics.baseline + metrics.grassTop) / 2 }
 
     func image(for state: MenuBarState) -> NSImage {
         let layout = GaugeLayout(textWidth: typeface.width(of: state.label), metrics: metrics)
@@ -41,6 +44,7 @@ struct TextGaugeStyle: MenuBarStyle {
             NSBezierPath(roundedRect: rect, xRadius: metrics.cellRadius, yRadius: metrics.cellRadius).fill()
         }
     }
+
 
     private static func overallAlpha(_ status: MenuBarState.Status) -> CGFloat {
         switch status {

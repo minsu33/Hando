@@ -49,12 +49,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         states
             .removeDuplicates { $0.0 == $1.0 && $0.1 == $1.1 }
-            .combineLatest(settings.$typefaceID.removeDuplicates())
+            .combineLatest(settings.$typefaceID.removeDuplicates(), settings.$lockEffectID.removeDuplicates())
             .receive(on: RunLoop.main)
-            .sink { (pair, typefaceID) in
+            .sink { (pair, typefaceID, effectID) in
                 let (state, name) = pair
                 let style = TextGaugeStyle(typeface: TypefaceCatalog.typeface(id: typefaceID))
-                statusItem.update(state: state, style: style, accessibilityLabel: Self.label(for: state, name: name))
+                let effect = LockEffectCatalog.effect(id: DemoMode.lockEffectOverride ?? effectID)
+                statusItem.update(state: state, style: style, lockEffect: effect,
+                                  accessibilityLabel: Self.label(for: state, name: name))
             }
             .store(in: &cancellables)
     }
@@ -110,9 +112,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .loading: return Strings.Accessibility.loading(name)
         case .error: return Strings.Accessibility.error(name)
         case .normal, .stale:
-            return Strings.Accessibility.gauge(name,
-                                               session: state.sessionUsed.map { Int(($0 * 100).rounded()) },
-                                               weekly: state.weeklyUsed.map { Int(($0 * 100).rounded()) })
+            let gauge = Strings.Accessibility.gauge(name,
+                                                    session: state.sessionUsed.map { Int(($0 * 100).rounded()) },
+                                                    weekly: state.weeklyUsed.map { Int(($0 * 100).rounded()) })
+            return state.lockedUntil.map { "\(gauge), \(Strings.Accessibility.resetsIn(TimeText.until($0)))" } ?? gauge
         }
     }
 }
