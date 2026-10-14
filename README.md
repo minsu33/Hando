@@ -1,4 +1,4 @@
-# HeadRoom
+# Hando
 
 Claude / Codex 쓰다가 한도 걸리는 게 싫어서 만든 메뉴바 앱
 
@@ -11,8 +11,8 @@ Claude / Codex 쓰다가 한도 걸리는 게 싫어서 만든 메뉴바 앱
 ## 설치
 
 ```bash
-git clone https://github.com/minsu33/HeadRoom.git
-cd HeadRoom
+git clone https://github.com/minsu33/Hando.git
+cd Hando
 ./scripts/build-app.sh --install
 ```
 

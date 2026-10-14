@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "HeadRoom",
+    name: "Hando",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "HeadRoom",
-            path: "Sources/HeadRoom"
+            name: "Hando",
+            path: "Sources/Hando"
         ),
         .testTarget(
-            name: "HeadRoomTests",
-            dependencies: ["HeadRoom"],
-            path: "Tests/HeadRoomTests",
+            name: "HandoTests",
+            dependencies: ["Hando"],
+            path: "Tests/HandoTests",
             resources: [.copy("Fixtures")]
         ),
     ]

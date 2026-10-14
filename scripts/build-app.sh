@@ -1,13 +1,13 @@
 #!/bin/zsh
-# HeadRoom.app 만들기
-#   ./scripts/build-app.sh            → dist/HeadRoom.app
+# Hando.app 만들기
+#   ./scripts/build-app.sh            → dist/Hando.app
 #   ./scripts/build-app.sh --install  → /Applications에 넣고 실행
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="HeadRoom"
-BUNDLE_ID="io.github.minsu33.headroom"
+APP_NAME="Hando"
+BUNDLE_ID="io.github.minsu33.hando"
 VERSION="${VERSION:-1.0.0}"
 BUILD="${BUILD:-$(date +%Y%m%d%H%M)}"
 DIST="dist"
