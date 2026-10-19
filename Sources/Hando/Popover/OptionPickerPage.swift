@@ -18,13 +18,7 @@ struct OptionPickerPage<Preview: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Button(action: onBack) {
-                Label(Strings.Popover.back, systemImage: "chevron.left")
-                    .font(.callout)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .keyboardShortcut(.cancelAction)
+            BackButton(action: onBack)
 
             Text(title)
                 .font(.caption)

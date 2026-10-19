@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItemController?
     private var credentialWatcher: FileWatcher?
     private var activityMonitor: ActivityMonitor?
+    private var systemEvents: SystemEvents?
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,7 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         openPopoverIfLoginNeeded(statusItem)
         bindProviderSelection()
         watchCredentials()
-        if !DemoMode.isEnabled { store.start() }   // 데모는 진짜 요청 안 보냄
+        if !DemoMode.isEnabled {   // 데모는 진짜 요청 안 보냄
+            store.start()
+            systemEvents = SystemEvents { [weak self] in self?.store.refreshAfterWake() }
+        }
     }
 
     private func bindMenuBar(to statusItem: StatusItemController) {

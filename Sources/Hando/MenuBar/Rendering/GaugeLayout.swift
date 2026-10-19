@@ -9,6 +9,7 @@ struct GaugeMetrics {
     var cellGap: CGFloat = 1.3
     var cellRadius: CGFloat = 0.8
     var emptyCellAlpha: CGFloat = 0.16
+    var allowanceCellAlpha: CGFloat = 0.45   // 오늘까지 몫인데 아직 안 쓴 칸
     var cellCount = 7
 
     static let standard = GaugeMetrics()
@@ -41,11 +42,15 @@ struct GaugeLayout {
     }
 
     /// used 0...1 → 칸마다 alpha. 경계 칸은 부분만큼
-    func cellAlphas(used: Double) -> [CGFloat] {
-        let filled = used * Double(metrics.cellCount)
-        return (0..<metrics.cellCount).map { i in
-            let part = CGFloat(min(max(filled - Double(i), 0), 1))
-            return metrics.emptyCellAlpha + (1 - metrics.emptyCellAlpha) * part
+    /// 칸 하나 = 주간의 하루. 바탕은 오늘까지 몫이면 중간, 아니면 흐리게. 쓴 만큼은 왼쪽부터 꽉 채움
+    struct CellFill: Equatable {
+        let background: CGFloat
+        let used: CGFloat   // 칸 안에서 채울 비율 0...1
+    }
+
+    func cellFills(used: Double, allowance: Double?) -> [CellFill] {
+        DailyAllowance.cells(used: used, allowance: allowance).map {
+            CellFill(background: $0.inAllowance ? metrics.allowanceCellAlpha : metrics.emptyCellAlpha, used: CGFloat($0.used))
         }
     }
 

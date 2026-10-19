@@ -14,6 +14,7 @@ final class UsageStore: ObservableObject {
     static let activeInterval: TimeInterval = 60
     static let activeWindow: TimeInterval = 5 * 60
     static let maxBackoff: TimeInterval = 15 * 60
+    static let wakeGap: TimeInterval = 30
 
     private let interval: () -> TimeInterval
     private let now: () -> Date
@@ -75,6 +76,14 @@ final class UsageStore: ObservableObject {
             self.pendingActivityRefresh = nil
             await self.refresh()
         }
+    }
+
+    /// 잠에서 깨거나 인터넷이 다시 붙었을 때. 방금 가져왔으면(wakeGap 안) 건너뜀
+    @discardableResult
+    func refreshAfterWake() -> Bool {
+        guard backoff == 0, now().timeIntervalSince(lastAttempt ?? .distantPast) >= Self.wakeGap else { return false }
+        Task { await refresh() }
+        return true
     }
 
     func refresh(_ context: FetchContext = .background) async {

@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// 설정 페이지의 계정 칸: 이메일, 구독 기간, CLI로 로그인/계정 바꾸기/로그아웃
 struct AccountSection: View {
     let account: AccountInfo?
     let commands: AccountCommands?
@@ -7,42 +8,28 @@ struct AccountSection: View {
     var onAction: (AccountCommands.Action) -> Void = { _ in }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let account { details(account) }
-            if let commands { actions(commands) }
-        }
-    }
-
-    @ViewBuilder
-    private func details(_ account: AccountInfo) -> some View {
-        if account.email != nil || account.subscriptionEndsAt != nil {
-            VStack(alignment: .leading, spacing: 3) {
-                if let email = account.email {
-                    Label(email, systemImage: "person.crop.circle")
-                }
-                if let end = account.subscriptionEndsAt {
-                    Label(Strings.Account.subscription(end.formatted(date: .abbreviated, time: .omitted),
-                                                       TimeText.dDay(end)),
-                          systemImage: "calendar")
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            if let email = account?.email {
+                Text(email).font(.callout)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-    }
-
-    private func actions(_ commands: AccountCommands) -> some View {
-        HStack(spacing: 6) {
-            if needsLogin {
-                button(Strings.Account.login, commands, .login)
-            } else {
-                button(Strings.Account.switchAccount, commands, .switchAccount)
-                button(Strings.Account.logout, commands, .logout)
+            if let end = account?.subscriptionEndsAt {
+                Text(Strings.Account.subscription(end.formatted(date: .abbreviated, time: .omitted), TimeText.dDay(end)))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Spacer()
+            if let commands {
+                HStack(spacing: 6) {
+                    if needsLogin {
+                        button(Strings.Account.login, commands, .login)
+                    } else {
+                        button(Strings.Account.switchAccount, commands, .switchAccount)
+                        button(Strings.Account.logout, commands, .logout)
+                    }
+                }
+                .controlSize(.small)
+                .help(Strings.Account.managedBy(commands.binary))
+            }
         }
-        .controlSize(.small)
-        .help(Strings.Account.managedBy(commands.binary))
     }
 
     private func button(_ title: String, _ commands: AccountCommands, _ action: AccountCommands.Action) -> some View {

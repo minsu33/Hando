@@ -10,13 +10,17 @@ struct MenuBarState: Equatable {
     let status: Status
     /// 한도를 다 써서 막혀 있으면 풀리는 시각 (주간이 다 찼으면 주간 기준)
     let lockedUntil: Date?
+    /// 주간을 7일로 나눴을 때 오늘까지 누적 몫 0...1 (잔디에 중간 진하기로 표시)
+    let weeklyAllowance: Double?
 
-    init(label: String, sessionUsed: Double?, weeklyUsed: Double?, status: Status, lockedUntil: Date? = nil) {
+    init(label: String, sessionUsed: Double?, weeklyUsed: Double?, status: Status,
+         lockedUntil: Date? = nil, weeklyAllowance: Double? = nil) {
         self.label = label.uppercased()
         self.sessionUsed = sessionUsed.map { min(max($0, 0), 1) }
         self.weeklyUsed = weeklyUsed.map { min(max($0, 0), 1) }
         self.status = status
         self.lockedUntil = lockedUntil
+        self.weeklyAllowance = weeklyAllowance
     }
 
     func isLocked(now: Date) -> Bool {
@@ -36,7 +40,8 @@ struct MenuBarState: Equatable {
                   sessionUsed: snapshot?.session?.usedFraction,
                   weeklyUsed: snapshot?.weekly?.usedFraction,
                   status: status,
-                  lockedUntil: locked?.resetsAt)
+                  lockedUntil: locked?.resetsAt,
+                  weeklyAllowance: snapshot?.weekly.flatMap { DailyAllowance.fraction(for: $0, now: now) })
     }
 
     private static func lockedWindow(_ snapshot: UsageSnapshot?, now: Date) -> UsageWindow? {

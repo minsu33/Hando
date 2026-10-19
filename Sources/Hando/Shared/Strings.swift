@@ -11,9 +11,10 @@ enum Strings {
             let hours = Int((seconds / 3600).rounded())
             return hours < 48 ? "\(hours)시간" : "\(hours / 24)일"
         }
-        static func used(_ p: Int) -> String { "\(p)% 사용" }
-        static func remaining(_ p: Int) -> String { "\(p)% 남음" }
-        static func resets(_ clock: String, _ left: String) -> String { "\(clock) 리셋 (\(left) 후)" }
+        static func todayLeft(_ p: Int) -> String { "오늘까지 몫 \(p)% 남음" }
+        static func todayOver(_ p: Int) -> String { "오늘까지 몫보다 \(p)% 더 씀" }
+        static func resetsIn(_ left: String) -> String { "\(left) 후 리셋" }
+        static func resetsAt(_ clock: String) -> String { "\(clock) 리셋" }
     }
 
     enum Popover {
@@ -24,6 +25,7 @@ enum Strings {
         static let launchAtLogin = "로그인 시 자동 실행"
         static let lockEffect = "다 찼을 때"
         static let back = "뒤로"
+        static let settings = "설정"
         static let refresh = "새로고침"
         static let quit = "종료"
         static func updated(_ clock: String) -> String { "\(clock) 업데이트" }

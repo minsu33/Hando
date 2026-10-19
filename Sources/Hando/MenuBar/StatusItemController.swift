@@ -79,50 +79,64 @@ final class StatusItemController: NSObject {
 }
 
 /// 로딩/오류: 천천히 깜빡임, 한도 다 씀: LockEffect를 몇 초마다 한 번 재생
+/// 재생할 프레임은 update 때마다 최신으로 바꿈 (글꼴·사용량이 바뀌어도 옛 그림이 안 나오게)
 @MainActor
-private final class StatusAnimator {
+final class StatusAnimator {
     private enum Mode: Equatable { case blink, lock(String) }
 
     private var mode: Mode?
     private var timer: Timer?
     private var frameTimer: Timer?
+    private var frames: [NSImage] = []
+    private var base: NSImage?
 
     static let blinkPeriod: TimeInterval = 1.2
     static let dimAlpha: CGFloat = 0.35
 
-    func play(_ effect: LockEffect, frames: [NSImage], base: NSImage, on button: NSStatusBarButton) {
-        guard mode != .lock(effect.id) else { return }
+    func play(_ effect: LockEffect, frames: [NSImage], base: NSImage, on button: NSButton) {
+        // 재생 중이던 건 끊고 새 그림으로
+        cancelRun()
+        self.frames = frames
+        self.base = base
+        button.image = base
+        guard mode != .lock(effect.id) else { return }   // 같은 효과면 주기는 그대로
+
         stop(button)
+        self.frames = frames
+        self.base = base
         mode = .lock(effect.id)
-        let run = { [weak self, weak button] in
-            guard let self, let button else { return }
-            self.runOnce(frames, interval: effect.frameInterval, base: base, on: button)
-        }
-        run()   // 꽉 찬 순간 바로 한 번
-        timer = Timer.scheduledTimer(withTimeInterval: effect.every, repeats: true) { _ in
-            MainActor.assumeIsolated { run() }
+        runOnce(interval: effect.frameInterval, on: button)   // 꽉 찬 순간 바로 한 번
+        timer = Timer.scheduledTimer(withTimeInterval: effect.every, repeats: true) { [weak self, weak button] _ in
+            MainActor.assumeIsolated {
+                guard let self, let button else { return }
+                self.runOnce(interval: effect.frameInterval, on: button)
+            }
         }
     }
 
-    private func runOnce(_ frames: [NSImage], interval: TimeInterval, base: NSImage, on button: NSStatusBarButton) {
-        frameTimer?.invalidate()
+    private func runOnce(interval: TimeInterval, on button: NSButton) {
+        cancelRun()
         var index = 0
         frameTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self, weak button] t in
             MainActor.assumeIsolated {
-                guard let button else { return t.invalidate() }
-                if index < frames.count {
-                    button.image = frames[index]
+                guard let self, let button else { return t.invalidate() }
+                if index < self.frames.count {
+                    button.image = self.frames[index]
                     index += 1
                 } else {
-                    button.image = base
-                    t.invalidate()
-                    self?.frameTimer = nil
+                    button.image = self.base
+                    self.cancelRun()
                 }
             }
         }
     }
 
-    func blink(_ button: NSStatusBarButton) {
+    private func cancelRun() {
+        frameTimer?.invalidate()
+        frameTimer = nil
+    }
+
+    func blink(_ button: NSButton) {
         guard mode != .blink else { return }
         stop(button)
         mode = .blink
@@ -139,13 +153,14 @@ private final class StatusAnimator {
         }
     }
 
-    func stop(_ button: NSStatusBarButton) {
+    func stop(_ button: NSButton) {
+        cancelRun()
         guard mode != nil else { return }
         timer?.invalidate()
         timer = nil
-        frameTimer?.invalidate()
-        frameTimer = nil
         mode = nil
+        frames = []
+        base = nil
         button.alphaValue = 1
     }
 }

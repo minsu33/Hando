@@ -124,3 +124,19 @@ final class UsageStorePersistenceTests: XCTestCase {
         XCTAssertEqual(decoded.windows, original.windows)
     }
 }
+
+@MainActor
+final class UsageStoreWakeTests: XCTestCase {
+    func testWakeRefreshesUnlessJustFetched() async {
+        var clock = Date(timeIntervalSince1970: 1_000_000)
+        let snapshot = UsageSnapshot(windows: [], account: .empty, fetchedAt: clock)
+        let store = UsageStore(provider: StubProvider(id: "a", result: .success(snapshot)), interval: { 120 }, now: { clock })
+
+        XCTAssertTrue(store.refreshAfterWake())        // 처음엔 바로
+        await store.refresh()                          // 방금 가져옴
+        clock += 10
+        XCTAssertFalse(store.refreshAfterWake())       // 10초 뒤 깨어남 → 건너뜀
+        clock += UsageStore.wakeGap
+        XCTAssertTrue(store.refreshAfterWake())        // 충분히 지나면 다시
+    }
+}

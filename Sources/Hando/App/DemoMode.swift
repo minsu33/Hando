@@ -11,8 +11,8 @@ enum DemoMode {
     private static let labelOverride = ProcessInfo.processInfo.environment["HANDO_FAKE_LABEL"]
 
     static let samples: [MenuBarState] = [
-        .init(label: "CLAUDE", sessionUsed: 0.38, weeklyUsed: 0.5, status: .normal),
-        .init(label: "CLAUDE", sessionUsed: 0.81, weeklyUsed: 0.64, status: .normal),
+        .init(label: "CLAUDE", sessionUsed: 0.38, weeklyUsed: 0.4, status: .normal, weeklyAllowance: 4.0 / 7),
+        .init(label: "CLAUDE", sessionUsed: 0.81, weeklyUsed: 0.64, status: .normal, weeklyAllowance: 3.0 / 7),
         .init(label: "CLAUDE", sessionUsed: 1, weeklyUsed: 0.7, status: .normal,
               lockedUntil: Date().addingTimeInterval(4 * 3600)),
         .init(label: "CLAUDE", sessionUsed: 1, weeklyUsed: 1, status: .normal,

@@ -21,7 +21,7 @@ enum PreviewExporter {
 
         let now = Date()
         let pixel = TextGaugeStyle(typeface: PixelTypeface())
-        let claude = MenuBarState(label: "CLAUDE", sessionUsed: 0.4, weeklyUsed: 0.45, status: .normal)
+        let claude = MenuBarState(label: "CLAUDE", sessionUsed: 0.4, weeklyUsed: 0.4, status: .normal, weeklyAllowance: 4.0 / 7)
         let codex = MenuBarState(label: "CODEX", sessionUsed: 0.65, weeklyUsed: 0.3, status: .normal)
 
         save(menuBar(pixel.image(for: claude), palette: light), dir, "menubar-claude")

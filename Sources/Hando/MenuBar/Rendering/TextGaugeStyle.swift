@@ -38,10 +38,17 @@ struct TextGaugeStyle: MenuBarStyle {
             ctx.restoreGState()
         }
 
-        let weekly = state.weeklyUsed ?? 0
-        for (rect, alpha) in zip(layout.cells, layout.cellAlphas(used: weekly)) {
-            NSColor.black.withAlphaComponent(alpha).setFill()
-            NSBezierPath(roundedRect: rect, xRadius: metrics.cellRadius, yRadius: metrics.cellRadius).fill()
+        let fills = layout.cellFills(used: state.weeklyUsed ?? 0, allowance: state.weeklyAllowance)
+        for (rect, fill) in zip(layout.cells, fills) {
+            let path = NSBezierPath(roundedRect: rect, xRadius: metrics.cellRadius, yRadius: metrics.cellRadius)
+            NSColor.black.withAlphaComponent(fill.background).setFill()
+            path.fill()
+            guard fill.used > 0 else { continue }
+            ctx.saveGState()
+            path.addClip()
+            NSColor.black.setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: rect.width * fill.used, height: rect.height).fill()
+            ctx.restoreGState()
         }
     }
 
