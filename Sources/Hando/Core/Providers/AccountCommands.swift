@@ -19,13 +19,13 @@ struct AccountCommands: Sendable {
         return """
         #!/bin/zsh -l
         if ! command -v \(binary) >/dev/null 2>&1; then
-          echo "\(binary) 명령어가 없어요. 설치하고 다시 눌러주세요:"
+          echo "\(Strings.Account.cliMissing(binary))"
           echo "  \(installHint)"
           exit 1
         fi
         \(steps.joined(separator: " && "))
         echo
-        echo "끝났어요. 이 창은 닫아도 돼요."
+        echo "\(Strings.Account.terminalDone)"
         """
     }
 }

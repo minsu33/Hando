@@ -55,8 +55,7 @@ final class ResetPlaybackTests: XCTestCase {
         let b = style.image(for: .init(label: "CLAUDE", sessionUsed: 0.0, weeklyUsed: 0.5, status: .normal))
 
         animator.playOnce([a, a, a], interval: 0.02, final: b, on: button)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
-        XCTAssertTrue(button.image === b)
+        XCTAssertTrue(spinUntil { button.image === b })
     }
 }
 

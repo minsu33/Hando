@@ -23,7 +23,9 @@ final class StatusAnimatorTests: XCTestCase {
         let newBase = image(FontTypeface.terminal)
         animator.play(effect, frames: Array(repeating: newBase, count: 6), base: newBase, on: button)
 
-        spin(0.6)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))   // 재생 시작
+        XCTAssertTrue(spinUntil { button.image === newBase })
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))   // 재생 끝난 뒤에도 그대로인지
         XCTAssertTrue(button.image === newBase)
         animator.stop(button)
     }
@@ -32,7 +34,7 @@ final class StatusAnimatorTests: XCTestCase {
         let animator = StatusAnimator()
         let button = NSButton()
         animator.blink(button)
-        spin(0.7)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.7))
         animator.stop(button)
         XCTAssertEqual(button.alphaValue, 1)
     }

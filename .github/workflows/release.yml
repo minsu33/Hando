@@ -12,7 +12,14 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - run: swift test
+      - name: swift test
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee test.log || {
+            # 로그인 없이도 보이게 실패 줄을 annotation으로
+            grep -E "error:|failed \\(" test.log | head -20 | while read -r line; do echo "::error::$line"; done
+            exit 1
+          }
       - name: build zip
         run: VERSION="${GITHUB_REF_NAME}" ./scripts/build-app.sh --zip
       - name: release

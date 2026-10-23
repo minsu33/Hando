@@ -59,3 +59,13 @@ final class StubHTTP: HTTPClient, @unchecked Sendable {
 
     func requests(to suffix: String) -> [URLRequest] { requests.filter { ($0.url?.path ?? "").hasSuffix(suffix) } }
 }
+
+/// 조건이 될 때까지 메인 런루프를 돌림 (최대 timeout). 고정 시간 기다리기보다 CI에서 덜 흔들림
+@discardableResult
+func spinUntil(timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    while !condition() && Date() < deadline {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+    }
+    return condition()
+}

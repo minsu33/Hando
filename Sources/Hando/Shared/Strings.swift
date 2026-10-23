@@ -40,6 +40,8 @@ enum Strings {
         static func managedBy(_ cli: String) -> String { "\(cli) CLI 로그인을 사용해요. 버튼을 누르면 터미널이 열려요" }
         static func subscription(_ date: String, _ dday: String) -> String { "\(date)까지 (\(dday))" }
         static let expired = "만료됨"
+        static func cliMissing(_ cli: String) -> String { "\(cli) 명령어가 없어요. 설치하고 다시 눌러주세요:" }
+        static let terminalDone = "끝났어요. 이 창은 닫아도 돼요."
     }
 
     enum Error {

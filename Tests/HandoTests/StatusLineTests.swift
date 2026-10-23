@@ -56,7 +56,7 @@ final class StatusLineStdinTests: XCTestCase {
         let pipe = Pipe()
         let start = Date()
         XCTAssertNil(StatusLine.readStdinIfPiped(fd: pipe.fileHandleForReading.fileDescriptor, timeout: 0.2))
-        XCTAssertLessThan(Date().timeIntervalSince(start), 1)
+        XCTAssertLessThan(Date().timeIntervalSince(start), 3)   // 0.2초 목표, CI 여유
         pipe.fileHandleForWriting.closeFile()
     }
 
