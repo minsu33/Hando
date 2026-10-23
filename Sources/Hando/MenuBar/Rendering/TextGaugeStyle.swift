@@ -30,7 +30,7 @@ struct TextGaugeStyle: MenuBarStyle {
 
         typeface.drawTrack(state.label, at: layout.textOrigin)
 
-        let inkUsed = state.sessionUsed ?? 0
+        let inkUsed = state.letterUsed ?? 0
         if inkUsed > 0 {
             ctx.saveGState()
             ctx.clip(to: layout.inkRect(used: inkUsed, step: typeface.inkStep))
@@ -47,7 +47,7 @@ struct TextGaugeStyle: MenuBarStyle {
             ctx.saveGState()
             path.addClip()
             NSColor.black.setFill()
-            CGRect(x: rect.minX, y: rect.minY, width: rect.width * fill.used, height: rect.height).fill()
+            CGRect(x: rect.minX, y: rect.minY, width: layout.filledWidth(of: rect, used: fill.used), height: rect.height).fill()
             ctx.restoreGState()
         }
     }

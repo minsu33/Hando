@@ -4,7 +4,7 @@ import XCTest
 final class TypefaceTests: XCTestCase {
     func testLineup() {
         let ids = TypefaceCatalog.all.map(\.id)
-        XCTAssertEqual(ids, ["system", "terminal", "pixel", "crt", "poster", "marker", "chalk"])
+        XCTAssertEqual(ids, ["system", "terminal", "pixel", "crt", "poster", "gauge", "typewriter"])
         XCTAssertEqual(TypefaceCatalog.typeface(id: "없는거").id, TypefaceCatalog.defaultID)
     }
 

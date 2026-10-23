@@ -27,10 +27,16 @@ struct CodexUsageResponse: Decodable {
     }
 
     func snapshot(account: AccountInfo, now: Date) -> UsageSnapshot {
-        let windows = [
+        var windows = [
             rateLimit?.primaryWindow.map { Self.window($0, fallback: .session, now: now) },
             rateLimit?.secondaryWindow.map { Self.window($0, fallback: .weekly, now: now) },
         ].compactMap { $0 }
+        // 둘이 같은 kind면(둘 다 7일 등) 뒤쪽은 other로. kind가 팝오버 목록 ID라서
+        if windows.count == 2, windows[0].kind == windows[1].kind {
+            let w = windows[1]
+            windows[1] = UsageWindow(kind: .other(seconds: w.duration), usedPercent: w.usedPercent,
+                                     duration: w.duration, resetsAt: w.resetsAt)
+        }
 
         var account = account
         if let plan = planType ?? account.plan {

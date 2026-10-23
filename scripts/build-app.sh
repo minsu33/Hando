@@ -8,11 +8,22 @@ cd "$(dirname "$0")/.."
 
 APP_NAME="Hando"
 BUNDLE_ID="io.github.minsu33.hando"
-VERSION="${VERSION:-1.0.0}"
+# 버전: 환경변수 > git 태그(vX.Y.Z) > 최근 커밋 제목이 vX.Y면 그거 > 0.0.0
+version_from_git() {
+  local tag; tag="$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)"
+  if [[ -n "$tag" ]]; then echo "${tag#v}"; return; fi
+  local subject; subject="$(git log -1 --pretty=%s 2>/dev/null || true)"
+  if [[ "$subject" =~ ^v([0-9]+(\.[0-9]+)*)$ ]]; then echo "${match[1]}"; return; fi
+  echo "0.0.0"
+}
+VERSION="${VERSION:-$(version_from_git)}"
+# CFBundleShortVersionString은 세 자리까지. "1.4" → "1.4.0"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+$ ]] && VERSION="$VERSION.0"
 BUILD="${BUILD:-$(date +%Y%m%d%H%M)}"
 DIST="dist"
 APP="$DIST/$APP_NAME.app"
 
+echo "▸ 버전 $VERSION"
 echo "▸ 빌드 (release, universal)"
 swift build -c release --arch arm64 --arch x86_64
 BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/$APP_NAME"

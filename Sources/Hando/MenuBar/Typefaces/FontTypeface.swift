@@ -30,8 +30,8 @@ struct FontTypeface: GaugeTypeface {
     static let system = FontTypeface(id: "system", name: "기본", font: .systemFont(ofSize: 12, weight: .heavy))
     static let terminal = FontTypeface(id: "terminal", name: "터미널", font: .monospacedSystemFont(ofSize: 12, weight: .heavy))
     static let poster = FontTypeface(id: "poster", name: "포스터", postScriptName: "Phosphate-Solid")
-    static let marker = FontTypeface(id: "marker", name: "마커", postScriptName: "MarkerFelt-Wide")
-    static let chalk = FontTypeface(id: "chalk", name: "분필", postScriptName: "Chalkduster")
+    static let gauge = FontTypeface(id: "gauge", name: "계기판", postScriptName: "DINAlternate-Bold")
+    static let typewriter = FontTypeface(id: "typewriter", name: "타자기", postScriptName: "AmericanTypewriter-CondensedBold")
 
     func width(of text: String) -> CGFloat {
         guard !text.isEmpty else { return 0 }

@@ -24,6 +24,7 @@ final class UsageStore: ObservableObject {
     private var lastActivity: Date?
     private var loop: Task<Void, Never>?
     private var pendingActivityRefresh: Task<Void, Never>?
+    private var queuedUserRefresh = false   // 갱신 중에 사용자가 누르면 끝나고 한 번 더
 
     init(provider: any UsageProvider,
          interval: @escaping () -> TimeInterval,
@@ -58,6 +59,7 @@ final class UsageStore: ObservableObject {
         guard provider.descriptor != self.provider.descriptor else { return }
         self.provider = provider
         state = ProviderState()
+        queuedUserRefresh = false
         backoff = 0
         lastActivity = nil
         restore()
@@ -87,7 +89,10 @@ final class UsageStore: ObservableObject {
     }
 
     func refresh(_ context: FetchContext = .background) async {
-        guard !state.isRefreshing else { return }
+        guard !state.isRefreshing else {
+            if context == .userInitiated { queuedUserRefresh = true }
+            return
+        }
         state.isRefreshing = true
         lastAttempt = now()
         let current = provider
@@ -104,6 +109,11 @@ final class UsageStore: ObservableObject {
         // 기다리는 동안 서비스가 바뀌었으면 버림
         guard current.descriptor == provider.descriptor else { return }
         apply(result)
+
+        if queuedUserRefresh {
+            queuedUserRefresh = false
+            await refresh(.userInitiated)
+        }
     }
 
     func nextDelay() -> TimeInterval {

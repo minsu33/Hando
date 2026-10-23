@@ -7,6 +7,7 @@ final class StatusItemController: NSObject {
     private let popover = NSPopover()
     private let animator = StatusAnimator()
     private var unlockTimer: Timer?
+    private var lastRendered: (state: MenuBarState, image: NSImage)?
     private let onOpen: () -> Void
 
     init(content: NSViewController, onOpen: @escaping () -> Void) {
@@ -26,21 +27,32 @@ final class StatusItemController: NSObject {
         }
     }
 
-    func update(state: MenuBarState, style: any MenuBarStyle, lockEffect: LockEffect, accessibilityLabel: String) {
+    func update(state: MenuBarState, style: any MenuBarStyle, lockEffect: LockEffect,
+                resetEffect: ResetEffect?, accessibilityLabel: String) {
         guard let button = statusItem.button else { return }
         button.setAccessibilityLabel(accessibilityLabel)
         button.toolTip = accessibilityLabel
 
-        button.image = style.image(for: state)
+        let image = style.image(for: state)
+        let previous = lastRendered
+        lastRendered = (state, image)
+        button.image = image
         watchUnlock(state)
-        // 로딩, 오류(로그인 필요 등)는 회색으로 깜빡임 / 한도 다 쓰면 몇 초마다 흔들림
+
+        // 로딩, 오류(로그인 필요 등)는 회색으로 깜빡임 / 한도 다 쓰면 몇 초마다 움직임 / 리셋되면 한 번 쓸려 나감
         if state.status == .loading || state.status == .error {
             animator.blink(button)
-        } else if state.isLocked(now: Date()), let base = button.image {
-            let source = FrameSource(image: base, textBottom: style.textBottom, letterCount: state.label.count)
-            animator.play(lockEffect, frames: lockEffect.frames(source), base: base, on: button)
+        } else if state.isLocked(now: Date()) {
+            let source = FrameSource(image: image, textBottom: style.textBottom, letterCount: state.label.count)
+            animator.play(lockEffect, frames: lockEffect.frames(source), base: image, on: button)
         } else {
             animator.stop(button)
+            if let resetEffect, let previous, state.isReset(from: previous.state) {
+                let before = FrameSource(image: previous.image, textBottom: style.textBottom, letterCount: state.label.count)
+                let after = FrameSource(image: image, textBottom: style.textBottom, letterCount: state.label.count)
+                animator.playOnce(resetEffect.frames(before, after), interval: resetEffect.frameInterval,
+                                  final: image, on: button)
+            }
         }
     }
 
@@ -112,6 +124,14 @@ final class StatusAnimator {
                 self.runOnce(interval: effect.frameInterval, on: button)
             }
         }
+    }
+
+    /// 주기 없이 딱 한 번 (리셋 전환). 재생 중 다른 상태가 오면 그쪽이 끊음
+    func playOnce(_ frames: [NSImage], interval: TimeInterval, final: NSImage, on button: NSButton) {
+        guard mode == nil else { return }
+        self.frames = frames
+        self.base = final
+        runOnce(interval: interval, on: button)
     }
 
     private func runOnce(interval: TimeInterval, on button: NSButton) {

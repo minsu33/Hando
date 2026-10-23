@@ -26,8 +26,8 @@ enum TypefaceCatalog {
         PixelTypeface(),
         PixelTypeface(style: .scanline),
         FontTypeface.poster,
-        FontTypeface.marker,
-        FontTypeface.chalk,
+        FontTypeface.gauge,
+        FontTypeface.typewriter,
     ]
 
     static let defaultID = "pixel"

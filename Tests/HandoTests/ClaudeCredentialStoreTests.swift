@@ -1,32 +1,8 @@
 import XCTest
 @testable import Hando
 
-private final class FakeSource: ClaudeCredentialSource, @unchecked Sendable {
-    var currentVersion: Date?
-    var payload: Keychain.ReadResult = .notFound
-    var locked = false              // 허용 창 필요한 상태
-    private(set) var reads: [Bool] = []   // interactive 여부 기록
 
-    func version() -> Date? { currentVersion }
-    func read(interactive: Bool) -> Keychain.ReadResult {
-        reads.append(interactive)
-        return locked && !interactive ? .needsPermission : payload
-    }
-    func email() -> String? { "me@example.com" }
-}
 
-private final class MemoryCache: ClaudeCredentialCache, @unchecked Sendable {
-    var entry: CachedClaudeCredentials?
-    func load() -> CachedClaudeCredentials? { entry }
-    func save(_ entry: CachedClaudeCredentials) { self.entry = entry }
-    func clear() { entry = nil }
-}
-
-private final class FakeRefresher: ClaudeCLIRefresher, @unchecked Sendable {
-    var calls = 0
-    var onRefresh: () -> Void = {}
-    func refresh() async { calls += 1; onRefresh() }
-}
 
 private final class Clock: @unchecked Sendable {
     var now = Date(timeIntervalSince1970: 2_000_000_000)

@@ -46,7 +46,10 @@ struct PopoverView: View {
                 if snapshot.windows.isEmpty {
                     Text(Strings.Popover.noWindows).font(.callout).foregroundStyle(.secondary)
                 }
-                ForEach(snapshot.windows, id: \.kind) { UsageWindowRow(window: $0) }
+                ForEach(Array(snapshot.windows.enumerated()), id: \.offset) { UsageWindowRow(window: $0.element) }
+                if snapshot.session == nil, snapshot.weekly != nil {
+                    Text(Strings.Popover.noSessionWindow).font(.caption).foregroundStyle(.secondary)
+                }
             } else if store.state.error == nil {
                 Text(Strings.Popover.loading).font(.callout).foregroundStyle(.secondary)
             }

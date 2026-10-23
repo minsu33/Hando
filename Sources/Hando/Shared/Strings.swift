@@ -20,10 +20,12 @@ enum Strings {
     enum Popover {
         static let loading = "불러오는 중…"
         static let noWindows = "표시할 한도 정보가 없어요"
+        static let noSessionWindow = "이 플랜은 5시간 한도가 없어서 메뉴바 글자도 주간 기준이에요"
         static let service = "서비스"
         static let typeface = "글꼴"
         static let launchAtLogin = "로그인 시 자동 실행"
         static let lockEffect = "다 찼을 때"
+        static let resetMotion = "리셋될 때 움직임"
         static let back = "뒤로"
         static let settings = "설정"
         static let refresh = "새로고침"
@@ -67,6 +69,7 @@ enum Strings {
             return [service, s, w].filter { !$0.isEmpty }.joined(separator: ", ")
         }
         static func resetsIn(_ left: String) -> String { "\(left) 뒤 리셋" }
+        static func weeklyOnly(_ service: String, weekly: Int) -> String { "\(service), 주간 \(weekly)% 사용 (5시간 한도 없는 플랜, 글자도 주간)" }
         static func loading(_ service: String) -> String { "\(service), 불러오는 중" }
         static func error(_ service: String) -> String { "\(service), 오류" }
     }

@@ -140,3 +140,33 @@ final class UsageStoreWakeTests: XCTestCase {
         XCTAssertTrue(store.refreshAfterWake())        // 충분히 지나면 다시
     }
 }
+
+@MainActor
+final class UsageStoreQueuedRefreshTests: XCTestCase {
+    /// 느린 가짜: fetch가 신호를 줄 때까지 기다림
+    private final class SlowProvider: UsageProvider, @unchecked Sendable {
+        let descriptor = ProviderDescriptor(id: "slow", displayName: "Slow", menuBarLabel: "SLOW")
+        var contexts: [FetchContext] = []
+        var release: CheckedContinuation<Void, Never>?
+        func hasCredentials() -> Bool { true }
+        func fetch(_ context: FetchContext) async throws -> UsageSnapshot {
+            contexts.append(context)
+            if contexts.count == 1 { await withCheckedContinuation { release = $0 } }
+            return UsageSnapshot(windows: [], account: .empty, fetchedAt: Date())
+        }
+    }
+
+    // 백그라운드 갱신 중에 사용자가 누르면 버리지 않고 끝난 뒤 한 번 더
+    func testUserRefreshDuringBackgroundIsQueued() async {
+        let provider = SlowProvider()
+        let store = UsageStore(provider: provider, interval: { 120 })
+
+        let background = Task { await store.refresh(.background) }
+        while provider.release == nil { await Task.yield() }
+        await store.refresh(.userInitiated)          // 갱신 중 → 큐에
+        provider.release?.resume()
+        await background.value
+
+        XCTAssertEqual(provider.contexts, [.background, .userInitiated])
+    }
+}

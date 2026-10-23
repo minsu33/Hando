@@ -6,10 +6,11 @@ struct GaugeMetrics {
     var baseline: CGFloat = 13
     var grassTop: CGFloat = 15.5
     var grassHeight: CGFloat = 2.5
-    var cellGap: CGFloat = 1.3
-    var cellRadius: CGFloat = 0.8
-    var emptyCellAlpha: CGFloat = 0.16
-    var allowanceCellAlpha: CGFloat = 0.45   // 오늘까지 몫인데 아직 안 쓴 칸
+    var cellGap: CGFloat = 1.5               // @2x 3px, 칸 경계가 또렷
+    var cellRadius: CGFloat = 0.5
+    var emptyCellAlpha: CGFloat = 0.22       // 안 쓴 글자(픽셀 도트)와 같은 진하기
+    var allowanceCellAlpha: CGFloat = 0.50   // 오늘까지 몫인데 아직 안 쓴 칸
+    var pixelGrid: CGFloat = 0.5             // 칸 경계·채움 폭 스냅 (@2x 픽셀)
     var cellCount = 7
 
     static let standard = GaugeMetrics()
@@ -33,12 +34,18 @@ struct GaugeLayout {
     var cells: [CGRect] {
         let n = CGFloat(metrics.cellCount)
         let width = (textWidth - metrics.cellGap * (n - 1)) / n
+        let g = metrics.pixelGrid
         return (0..<metrics.cellCount).map { i in
-            CGRect(x: metrics.padding + CGFloat(i) * (width + metrics.cellGap),
-                   y: metrics.grassTop,
-                   width: width,
-                   height: metrics.grassHeight)
+            // 양 끝 경계를 픽셀 격자에 맞춤 (칸 폭이 비정수여도 흐려지지 않게)
+            let left = (( metrics.padding + CGFloat(i) * (width + metrics.cellGap)) / g).rounded() * g
+            let right = ((metrics.padding + CGFloat(i) * (width + metrics.cellGap) + width) / g).rounded() * g
+            return CGRect(x: left, y: metrics.grassTop, width: max(right - left, g), height: metrics.grassHeight)
         }
+    }
+
+    /// 칸 안 채움 폭 (0.5pt 단위)
+    func filledWidth(of cell: CGRect, used: CGFloat) -> CGFloat {
+        (cell.width * used / metrics.pixelGrid).rounded() * metrics.pixelGrid
     }
 
     /// used 0...1 → 칸마다 alpha. 경계 칸은 부분만큼

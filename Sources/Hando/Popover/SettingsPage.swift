@@ -21,6 +21,9 @@ struct SettingsPage: View {
             VStack(spacing: 10) {
                 typefaceRow
                 lockEffectRow
+                Toggle(Strings.Popover.resetMotion, isOn: $settings.resetMotion)
+                    .toggleStyle(.checkbox)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 if LaunchAtLogin.isAvailable {
                     Toggle(Strings.Popover.launchAtLogin, isOn: $launchAtLogin)
                         .toggleStyle(.checkbox)

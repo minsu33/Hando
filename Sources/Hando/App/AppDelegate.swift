@@ -53,13 +53,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         states
             .removeDuplicates { $0.0 == $1.0 && $0.1 == $1.1 }
-            .combineLatest(settings.$typefaceID.removeDuplicates(), settings.$lockEffectID.removeDuplicates())
+            .combineLatest(settings.$typefaceID.removeDuplicates(), settings.$lockEffectID.removeDuplicates(),
+                           settings.$resetMotion.removeDuplicates())
             .receive(on: RunLoop.main)
-            .sink { (pair, typefaceID, effectID) in
+            .sink { (pair, typefaceID, effectID, resetMotion) in
                 let (state, name) = pair
                 let style = TextGaugeStyle(typeface: TypefaceCatalog.typeface(id: typefaceID))
                 let effect = LockEffectCatalog.effect(id: DemoMode.lockEffectOverride ?? effectID)
                 statusItem.update(state: state, style: style, lockEffect: effect,
+                                  resetEffect: resetMotion ? ResetEffectCatalog.effect(id: DemoMode.resetEffectOverride) : nil,
                                   accessibilityLabel: Self.label(for: state, name: name))
             }
             .store(in: &cancellables)
@@ -116,9 +118,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .loading: return Strings.Accessibility.loading(name)
         case .error: return Strings.Accessibility.error(name)
         case .normal, .stale:
-            let gauge = Strings.Accessibility.gauge(name,
-                                                    session: state.sessionUsed.map { Int(($0 * 100).rounded()) },
-                                                    weekly: state.weeklyUsed.map { Int(($0 * 100).rounded()) })
+            let gauge = state.lettersShowWeekly
+                ? Strings.Accessibility.weeklyOnly(name, weekly: state.weeklyUsed.map { Int(($0 * 100).rounded()) } ?? 0)
+                : Strings.Accessibility.gauge(name,
+                                              session: state.sessionUsed.map { Int(($0 * 100).rounded()) },
+                                              weekly: state.weeklyUsed.map { Int(($0 * 100).rounded()) })
             return state.lockedUntil.map { "\(gauge), \(Strings.Accessibility.resetsIn(TimeText.until($0)))" } ?? gauge
         }
     }

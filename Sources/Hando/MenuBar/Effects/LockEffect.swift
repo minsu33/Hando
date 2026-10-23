@@ -32,15 +32,20 @@ enum LockEffectCatalog {
 }
 
 extension LockEffect {
-    /// 좌우로 도리도리
-    static let shake = LockEffect(id: "shake", name: "흔들림", frameInterval: 0.06) { src in
+    // 공통 규칙: 재생 1초 이하, 간격 6초 이상, 잔디는 안 움직임 (디자인 검토 2026-10-23)
+
+    /// 글자만 좌우로 도리도리
+    static let shake = LockEffect(id: "shake", name: "흔들림", every: 6, frameInterval: 0.06) { src in
         [-2, 2, -1.5, 1.5, -0.5, 0].map { dx in
-            FrameCanvas.draw(src.size) { $0.place(src.image, from: CGRect(origin: .zero, size: src.size), dx: dx) }
+            FrameCanvas.draw(src.size) { canvas in
+                canvas.place(src.image, from: src.grassRect)
+                canvas.place(src.image, from: src.textRect, dx: dx)
+            }
         }
     }
 
     /// 글자가 왼쪽부터 하나씩 톡 튀어 오름
-    static let wave = LockEffect(id: "wave", name: "웨이브", frameInterval: 0.04) { src in
+    static let wave = LockEffect(id: "wave", name: "웨이브", every: 6, frameInterval: 0.04) { src in
         let n = max(src.letterCount, 1)
         let strip = src.size.width / CGFloat(n)
         let steps = n * 3 + 6
@@ -57,15 +62,18 @@ extension LockEffect {
         }
     }
 
-    /// 두-근
-    static let heartbeat = LockEffect(id: "heartbeat", name: "두근", every: 4, frameInterval: 0.05) { src in
-        [1.06, 1.1, 1.04, 1, 1.05, 1.08, 1.03, 1].map { scale in
-            FrameCanvas.draw(src.size) { $0.place(src.image, scale: scale) }
+    /// 두-근: 글자가 두 번 살짝 내려앉음 (확대는 비트맵이 계단져서 안 씀)
+    static let heartbeat = LockEffect(id: "heartbeat", name: "두근", every: 6, frameInterval: 0.06) { src in
+        [1, 0, 0, 1.5, 0.5, 0].map { dy in
+            FrameCanvas.draw(src.size) { canvas in
+                canvas.place(src.image, from: src.grassRect)
+                canvas.place(src.image, from: src.textRect, dy: dy)
+            }
         }
     }
 
-    /// 가로로 찢어졌다 돌아옴
-    static let glitch = LockEffect(id: "glitch", name: "글리치", every: 4, frameInterval: 0.05) { src in
+    /// 글자가 가로로 찢어졌다 돌아옴
+    static let glitch = LockEffect(id: "glitch", name: "글리치", every: 7, frameInterval: 0.05) { src in
         // (밴드 위치 비율, 높이 비율, 밀림) 프레임마다 다르게
         let frames: [[(CGFloat, CGFloat, CGFloat)]] = [
             [(0.1, 0.25, 2), (0.55, 0.2, -1.5)],
@@ -86,9 +94,9 @@ extension LockEffect {
     }
 
     /// 글자가 왼쪽으로 한 바퀴 흘러감
-    static let marquee = LockEffect(id: "marquee", name: "전광판", every: 6, frameInterval: 0.04) { src in
+    static let marquee = LockEffect(id: "marquee", name: "전광판", every: 10, frameInterval: 0.03) { src in
         let width = src.size.width
-        let stepSize: CGFloat = 1.5
+        let stepSize: CGFloat = 2
         let steps = Int((width / stepSize).rounded(.up))
         return (1...steps).map { step in
             let offset = CGFloat(step) * stepSize
