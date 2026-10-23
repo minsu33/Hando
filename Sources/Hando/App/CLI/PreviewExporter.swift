@@ -20,12 +20,13 @@ enum PreviewExporter {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let now = Date()
-        let pixel = TextGaugeStyle(typeface: PixelTypeface())
+        let intro = TextGaugeStyle(typeface: FontTypeface.system)   // README 맨 위: 처음 보는 사람한테 익숙한 기본 글꼴
+        let pixel = TextGaugeStyle(typeface: PixelTypeface())        // 꾸미기 움짤: 개성 보여주기
         let claude = MenuBarState(label: "CLAUDE", sessionUsed: 0.4, weeklyUsed: 0.4, status: .normal, weeklyAllowance: 4.0 / 7)
         let codex = MenuBarState(label: "CODEX", sessionUsed: 0.65, weeklyUsed: 0.3, status: .normal)
 
-        save(menuBar(pixel.image(for: claude), palette: light), dir, "menubar-claude")
-        save(menuBar(pixel.image(for: codex), palette: light), dir, "menubar-codex")
+        save(menuBar(intro.image(for: claude), palette: light), dir, "menubar-claude")
+        save(menuBar(intro.image(for: codex), palette: light), dir, "menubar-codex")
 
         let full = MenuBarState(label: "CLAUDE", sessionUsed: 1, weeklyUsed: 0.6, status: .normal, lockedUntil: now + 3600)
         let states: [(MenuBarState, String)] = [
@@ -34,7 +35,7 @@ enum PreviewExporter {
             (full, "다 씀"),
             (.init(label: "CLAUDE", sessionUsed: nil, weeklyUsed: nil, status: .error), "로그인 필요"),
         ]
-        save(row(states.map { (pixel.image(for: $0.0), $0.1) }, palette: light), dir, "states")
+        save(row(states.map { (intro.image(for: $0.0), $0.1) }, palette: light), dir, "states")
 
         let typefaces = TypefaceCatalog.all.map { (TextGaugeStyle(typeface: $0).image(for: claude), $0.name) }
         save(row(typefaces, palette: light), dir, "typefaces")

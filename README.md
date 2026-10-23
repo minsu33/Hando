@@ -2,12 +2,12 @@
 
 AI 쓸 때 Claude / Codex 한도를 상시 확인하고 싶어서 만든 메뉴바 앱
 
-<img src="assets/menubar-claude.png" width="604" alt="Claude">
-<img src="assets/menubar-codex.png" width="588" alt="Codex">
+<img src="assets/menubar-claude.png" width="612" alt="Claude">
+<img src="assets/menubar-codex.png" width="598" alt="Codex">
 
 글자는 5시간, 아래 잔디는 주간 사용량. 쓸수록 채워지고, 다 쓰면 몇 초마다 글자가 움직임
 
-<img src="assets/states.png" width="608" alt="상태">
+<img src="assets/states.png" width="640" alt="상태">
 
 ## 꾸미기
 
