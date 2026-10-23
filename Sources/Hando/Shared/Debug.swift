@@ -18,7 +18,7 @@ enum Debug {
     static func redact(_ text: String) -> String {
         // 키 이름으로 먼저 가리고, 나머지는 모양으로
         let keyed = text.replacingOccurrences(
-            of: #""(email|user_id|account_id|sub|id)"\s*:\s*"[^"]*""#,
+            of: #""(email|email_address|user_id|account_id|sub|id|uuid|full_name|display_name|name|phone_number)"\s*:\s*"[^"]*""#,
             with: "\"$1\": \"***\"", options: .regularExpression)
         let patterns = [
             #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#,

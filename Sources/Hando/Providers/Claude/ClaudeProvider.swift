@@ -6,9 +6,11 @@ struct ClaudeProvider: UsageProvider {
     let descriptor = ProviderDescriptor(id: "claude", displayName: "Claude", menuBarLabel: "CLAUDE")
 
     private static let endpoint = URL(string: "https://api.anthropic.com/api/oauth/usage")!
+    private static let profileEndpoint = URL(string: "https://api.anthropic.com/api/oauth/profile")!
 
     var http: HTTPClient = URLSession.shared
     var credentials = ClaudeCredentialStore()
+    private let profiles = ClaudeProfileCache()
 
     var activityFolders: [URL] { [ClaudeCodeCredentialSource.configDir.appendingPathComponent("projects")] }
 
@@ -31,12 +33,8 @@ struct ClaudeProvider: UsageProvider {
     func fetch(_ context: FetchContext) async throws -> UsageSnapshot {
         let entry = try await credentials.current(context)
 
-        var request = URLRequest(url: Self.endpoint, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-        request.setValue("Bearer \(entry.credentials.accessToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        let (data, response) = try await http.send(request)
+        let token = entry.credentials.accessToken
+        let (data, response) = try await http.send(Self.request(Self.endpoint, token: token))
         Debug.dump(descriptor.id, status: response.statusCode, body: data)
 
         guard response.statusCode == 200 else {
@@ -44,7 +42,23 @@ struct ClaudeProvider: UsageProvider {
             throw ProviderError(status: response.statusCode, loginHint: Strings.Claude.relogin,
                                 retryAfter: response.value(forHTTPHeaderField: "Retry-After"))
         }
-        let account = AccountInfo(email: entry.email, plan: entry.credentials.plan)
+        let profile = await profiles.profile(token: token) { await loadProfile(token: token) }
+        let account = AccountInfo(email: profile?.email ?? entry.email, plan: profile?.plan ?? entry.credentials.plan)
         return try ClaudeUsageResponse.snapshot(from: data, account: account, now: Date())
+    }
+
+    // 실패해도 사용량은 보여야 하니까 nil
+    private func loadProfile(token: String) async -> ClaudeProfile? {
+        guard let (data, response) = try? await http.send(Self.request(Self.profileEndpoint, token: token)) else { return nil }
+        Debug.dump("\(descriptor.id) profile", status: response.statusCode, body: data)
+        return response.statusCode == 200 ? ClaudeProfile.parse(data) : nil
+    }
+
+    private static func request(_ url: URL, token: String) -> URLRequest {
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        return request
     }
 }
