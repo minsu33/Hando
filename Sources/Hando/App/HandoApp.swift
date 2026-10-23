@@ -4,7 +4,9 @@ import AppKit
 enum HandoApp {
     @MainActor
     static func main() {
-        if PreviewExporter.runIfRequested() { return }
+        // 명령줄 모드 (앱 안 띄움)
+        if VersionFlag.runIfRequested() || StatusLine.runIfRequested()
+            || PreviewExporter.runIfRequested() || IconExporter.runIfRequested() { return }
 
         let app = NSApplication.shared
         let delegate = AppDelegate()
