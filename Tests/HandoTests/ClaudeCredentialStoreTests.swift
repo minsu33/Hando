@@ -142,3 +142,16 @@ final class FileClaudeCredentialCacheTests: XCTestCase {
         XCTAssertNil(cache.load())
     }
 }
+
+final class ClaudeCLIRefresherTests: XCTestCase {
+    // auth status는 토큰을 안 바꿔서 /status로 (실제 확인한 것)
+    func testDefaultCommandActuallyRefreshes() {
+        XCTAssertEqual(ShellClaudeCLIRefresher.defaultCommand, "claude -p /status")
+    }
+
+    func testShellRunsInGivenDirectory() async {
+        let dir = FileManager.default.temporaryDirectory
+        let result = await ShellCommand.run("test \"$PWD\" -ef \(dir.path)", timeout: 10, in: dir)
+        XCTAssertEqual(result.status, 0)
+    }
+}

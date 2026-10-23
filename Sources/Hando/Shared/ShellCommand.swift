@@ -8,11 +8,12 @@ enum ShellCommand {
         let timedOut: Bool
     }
 
-    static func run(_ command: String, timeout: TimeInterval = 30) async -> Output {
+    static func run(_ command: String, timeout: TimeInterval = 30, in directory: URL? = nil) async -> Output {
         await withCheckedContinuation { continuation in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-lc", command]
+            if let directory { process.currentDirectoryURL = directory }
             process.standardInput = FileHandle.nullDevice
             process.standardOutput = FileHandle.nullDevice
             process.standardError = FileHandle.nullDevice

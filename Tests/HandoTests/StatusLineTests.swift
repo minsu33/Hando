@@ -49,3 +49,22 @@ final class StatusLineTests: XCTestCase {
         XCTAssertNil(StatusLine.parseClaudeCode(Data("not json".utf8)))
     }
 }
+
+final class StatusLineStdinTests: XCTestCase {
+    // 닫히지 않는 파이프여도 멈추지 않고 0.3초 안에 포기
+    func testOpenPipeDoesNotHang() {
+        let pipe = Pipe()
+        let start = Date()
+        XCTAssertNil(StatusLine.readStdinIfPiped(fd: pipe.fileHandleForReading.fileDescriptor, timeout: 0.2))
+        XCTAssertLessThan(Date().timeIntervalSince(start), 1)
+        pipe.fileHandleForWriting.closeFile()
+    }
+
+    func testReadsUntilEOF() {
+        let pipe = Pipe()
+        pipe.fileHandleForWriting.write(Data(#"{"rate_limits":{}}"#.utf8))
+        pipe.fileHandleForWriting.closeFile()
+        let data = StatusLine.readStdinIfPiped(fd: pipe.fileHandleForReading.fileDescriptor)
+        XCTAssertEqual(data.map { String(decoding: $0, as: UTF8.self) }, #"{"rate_limits":{}}"#)
+    }
+}

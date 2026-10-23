@@ -6,11 +6,14 @@ protocol ClaudeCLIRefresher: Sendable {
 }
 
 struct ShellClaudeCLIRefresher: ClaudeCLIRefresher {
-    // 사용량 안 쓰고 로그인 상태만 확인하는 명령. 실행하면서 만료된 토큰을 갱신함
-    var command = "claude auth status --json"
+    // `claude auth status`는 로컬만 읽어서 갱신 안 됨 (2026-10-23 확인). /status는 계정 상태를 서버에 물어보면서 토큰을 갱신함
+    // 디버그용으로 HANDO_CLI_REFRESH 환경변수로 바꿔볼 수 있음
+    static let defaultCommand = "claude -p /status"
+    var command = ProcessInfo.processInfo.environment["HANDO_CLI_REFRESH"] ?? defaultCommand
 
     func refresh() async {
-        let result = await ShellCommand.run(command, timeout: 30)
+        // 아무 프로젝트 폴더도 아닌 임시 폴더에서 (그 폴더 설정을 안 읽게)
+        let result = await ShellCommand.run(command, timeout: 30, in: FileManager.default.temporaryDirectory)
         Debug.log("[claude] cli refresh: status \(result.status)\(result.timedOut ? " (timeout)" : "")")
     }
 }

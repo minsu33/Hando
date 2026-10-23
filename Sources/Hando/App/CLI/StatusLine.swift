@@ -19,12 +19,17 @@ enum StatusLine {
         if let stdin, let snapshot = parseClaudeCode(stdin) {
             line = render(label: "CLAUDE", snapshot: snapshot, now: Date(), fromCache: false)
         } else {
-            let id = requested ?? UserDefaults(suiteName: appDefaultsSuite)?.string(forKey: "providerID") ?? "claude"
+            let id = requested ?? appDefaults.string(forKey: "providerID") ?? "claude"
             let snapshot = FileSnapshotCache().load(providerID: id)
             line = render(label: id.uppercased(), snapshot: snapshot, now: Date(), fromCache: true)
         }
         print(line)
         return true
+    }
+
+    /// 앱 설정. .app 안에서 실행되면 자기 설정 그대로, 밖(swift run 등)이면 앱 설정을 이름으로 열기
+    private static var appDefaults: UserDefaults {
+        Bundle.main.bundleIdentifier == appDefaultsSuite ? .standard : (UserDefaults(suiteName: appDefaultsSuite) ?? .standard)
     }
 
     // MARK: - 순수 함수 (테스트용)
@@ -69,9 +74,24 @@ enum StatusLine {
         }
     }
 
-    private static func readStdinIfPiped() -> Data? {
-        guard isatty(FileHandle.standardInput.fileDescriptor) == 0 else { return nil }
-        let data = FileHandle.standardInput.readDataToEndOfFile()
+    /// stdin이 파이프면 읽되, 닫히지 않는 파이프에서 멈추지 않게 최대 timeout까지만
+    static func readStdinIfPiped(fd: Int32 = STDIN_FILENO, timeout: TimeInterval = 0.3) -> Data? {
+        guard isatty(fd) == 0 else { return nil }
+        let flags = fcntl(fd, F_GETFL)
+        _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
+        defer { _ = fcntl(fd, F_SETFL, flags) }
+
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 4096)
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            var pfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+            let left = Int32(max(1, deadline.timeIntervalSinceNow * 1000))
+            guard poll(&pfd, 1, left) > 0 else { break }          // 시간 다 됨
+            let n = read(fd, &buffer, buffer.count)
+            if n > 0 { data.append(buffer, count: n) } else if n == 0 { break }   // EOF
+            else if errno != EAGAIN { break }
+        }
         return data.isEmpty ? nil : data
     }
 }

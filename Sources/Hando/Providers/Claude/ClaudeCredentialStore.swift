@@ -36,6 +36,7 @@ actor ClaudeCredentialStore {
         }
 
         if let cached = cache.load(), cached.sourceVersion == version {
+            Debug.log("[claude] using app copy (expired: \(cached.credentials.isExpired(now: now()) ? "yes" : "no"))")
             if !cached.credentials.isExpired(now: now()) { return cached }
             return try await refreshViaCLI(context, staleVersion: version)
         }
@@ -70,6 +71,7 @@ actor ClaudeCredentialStore {
             cache.save(entry)
             return entry
         case .needsPermission:
+            Debug.log("[claude] login changed, keychain needs permission")
             throw ProviderError.needsUserAction(hint: Strings.Claude.needsPermission)
         case .notFound:
             cache.clear()
@@ -85,6 +87,8 @@ actor ClaudeCredentialStore {
         lastCLIRefresh = now()
         await refresher.refresh()
 
+        let renewed = probe(force: true).map { $0 != staleVersion } ?? false
+        Debug.log("[claude] cli refresh renewed login: \(renewed ? "yes" : "no")")
         guard let version = probe(force: true), version != staleVersion else {
             throw ProviderError.unauthorized(hint: Strings.Claude.relogin)
         }
