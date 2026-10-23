@@ -30,7 +30,7 @@ enum TypefaceCatalog {
         FontTypeface.typewriter,
     ]
 
-    static let defaultID = "pixel"
+    static let defaultID = "system"   // 처음 설치하면 기본 글꼴. 개성 있는 건 설정에서
 
     static func typeface(id: String) -> any GaugeTypeface {
         all.first { $0.id == id } ?? all.first { $0.id == defaultID }!

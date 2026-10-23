@@ -61,3 +61,18 @@ final class LockTests: XCTestCase {
         XCTAssertFalse(MenuBarState(label: "C", sessionUsed: 0.99, weeklyUsed: 0, status: .normal).isLocked(now: now))
     }
 }
+
+@MainActor
+final class DefaultSettingsTests: XCTestCase {
+    // 처음 설치하면 기본 글꼴, 이미 고른 사람은 그대로
+    func testFreshInstallUsesSystemFont() {
+        let suite = "hando-test-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        XCTAssertEqual(AppSettings(defaults: defaults).typefaceID, "system")
+
+        defaults.set("pixel", forKey: "typefaceID")
+        XCTAssertEqual(AppSettings(defaults: defaults).typefaceID, "pixel")
+    }
+}
