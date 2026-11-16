@@ -100,7 +100,8 @@ enum StatusLine {
 enum VersionFlag {
     static func runIfRequested() -> Bool {
         guard CommandLine.arguments.contains("--version") else { return false }
-        print("Hando \(version(executable: CommandLine.arguments[0]))")
+        // PATH로 `hando`만 치면 argv[0]은 이름뿐이라, 실제 실행 경로를 macOS에 물어봄
+        print("Hando \(version(executable: Bundle.main.executablePath ?? CommandLine.arguments[0]))")
         return true
     }
 
