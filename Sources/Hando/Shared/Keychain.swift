@@ -35,6 +35,24 @@ enum Keychain {
         }
     }
 
+    /// `/usr/bin/security`로 값 읽기.
+    /// Claude Code는 로그인 정보를 security 도구로 저장해서, 그 항목은 security가 읽을 땐 허용 창이 안 뜸.
+    /// Claude Code가 토큰을 다시 써도, Hando가 업데이트돼도 마찬가지. 막히면(시간 초과 등) nil → 기존 방식으로
+    static func readViaSecurityTool(service: String, timeout: TimeInterval = 3,
+                                    executable: String = "/usr/bin/security") -> ReadResult? {
+        guard let out = ProcessRunner.run(executable, ["find-generic-password", "-s", service, "-w"], timeout: timeout) else {
+            return nil
+        }
+        switch out.status {
+        case 0:
+            var data = out.stdout
+            if data.last == UInt8(ascii: "\n") { data.removeLast() }
+            return data.isEmpty ? .notFound : .found(data)
+        case 44: return .notFound      // errSecItemNotFound
+        default: return nil
+        }
+    }
+
     private static func baseQuery(service: String, interactive: Bool) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

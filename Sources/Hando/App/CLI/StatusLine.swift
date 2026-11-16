@@ -100,8 +100,18 @@ enum StatusLine {
 enum VersionFlag {
     static func runIfRequested() -> Bool {
         guard CommandLine.arguments.contains("--version") else { return false }
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
-        print("Hando \(version)")
+        print("Hando \(version(executable: CommandLine.arguments[0]))")
         return true
+    }
+
+    /// brew가 만든 `hando` 링크로 실행하면 Bundle.main이 앱을 못 찾아서, 링크를 풀어 .app을 직접 찾음
+    static func version(executable: String) -> String {
+        let key = "CFBundleShortVersionString"
+        let real = URL(fileURLWithPath: executable).resolvingSymlinksInPath()
+        let app = real.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()   // .../Hando.app
+        if app.pathExtension == "app", let v = Bundle(url: app)?.object(forInfoDictionaryKey: key) as? String { return v }
+        if Bundle.main.bundleIdentifier == StatusLine.appDefaultsSuite,
+           let v = Bundle.main.object(forInfoDictionaryKey: key) as? String { return v }
+        return "dev"
     }
 }

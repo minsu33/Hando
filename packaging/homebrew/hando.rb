@@ -1,8 +1,7 @@
-# minsu33/homebrew-tap 레포의 Casks/hando.rb 로 복사해서 씀
-# 버전 올릴 때: ./scripts/bump-cask.sh 1.5.0
+# 템플릿. 실제 버전·sha256은 scripts/bump-cask.sh가 homebrew-tap 레포에 채워 넣음
 cask "hando" do
-  version "1.5.2"
-  sha256 "0412a9e3f4bac52891a79c14e7baa9c5d4c73707a291e3d4c77681632a126a55"
+  version "0.0.0"
+  sha256 "SHA256"
 
   url "https://github.com/minsu33/Hando/releases/download/v#{version}/Hando-#{version}.zip"
   name "Hando"

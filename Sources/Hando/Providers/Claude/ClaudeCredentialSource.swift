@@ -35,6 +35,16 @@ struct ClaudeCodeCredentialSource: ClaudeCredentialSource {
 
     func read(interactive: Bool) -> Keychain.ReadResult {
         if let data = try? Data(contentsOf: Self.credentialsFile) { return .found(data) }
+
+        // 1순위: security 도구 (허용 창 없음). 한 번 막히면 이번 실행 동안은 안 씀 (창이 계속 뜨지 않게)
+        if !SecurityToolGate.blocked {
+            if let result = Keychain.readViaSecurityTool(service: Self.keychainService) {
+                Debug.log("[claude] read via security tool: ok")
+                return result
+            }
+            SecurityToolGate.blocked = true
+            Debug.log("[claude] read via security tool: failed, fallback")
+        }
         return Keychain.read(service: Self.keychainService, interactive: interactive)
     }
 
@@ -43,5 +53,16 @@ struct ClaudeCodeCredentialSource: ClaudeCredentialSource {
               let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
               let account = root["oauthAccount"] as? [String: Any] else { return nil }
         return account["emailAddress"] as? String
+    }
+}
+
+/// security 도구가 한 번 실패하면 앱이 꺼질 때까지 다시 안 씀
+enum SecurityToolGate {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var value = false
+
+    static var blocked: Bool {
+        get { lock.lock(); defer { lock.unlock() }; return value }
+        set { lock.lock(); value = newValue; lock.unlock() }
     }
 }
